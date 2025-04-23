@@ -84,8 +84,9 @@ intent_responses = {
         ]
     },
     "scheduling": {
-        "initial": "You want to schedule an appointment. Do you prefer mornings or afternoons? And which day works best for you?",
-        "follow_up": []
+        "initial": "You want to schedule an appointment. And which day works best for you?",
+        "follow_up": ["Do you prefer mornings or afternoons? Or is there a specific time that works", 
+                      "Is there a specific person you want you appointment with?"]
     },
     "warranty": {
         "initial": "You're asking about your car's extended warranty. First, is this about a specific repair or general coverage?",
