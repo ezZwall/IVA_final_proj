@@ -16,6 +16,13 @@ conversation_history = []
 minimum_turns = 3
 call_ended = False
 
+# Track conversation state
+conversation_state = {
+    "current_intent": None,
+    "follow_up_index": 0,
+    "awaiting_response": False
+}
+
 # === Small Talk Responses & Intent Keywords ===
 
 small_talk_map = {
@@ -33,7 +40,7 @@ small_talk_map = {
     "goodbye": "Goodbye! Have a great day!",
     "bye": "Talk to you later!",
     "what do you do": "I'm here to help with things like billing, tech support, appointments, and warranty questions.",
-    "are you real": "I’m real enough to help you get things done!",
+    "are you real": "I'm real enough to help you get things done!",
     "can you help me": "Of course! What do you need help with?",
     "that's awesome": "Thanks! I'm here to assist.",
 }
@@ -60,18 +67,34 @@ intent_keywords = {
 
 
 intent_responses = {
-    "billing": "I can help you with your bill. Would you like to review your charges or make a payment?",
-    "tech_support": (
-        "It seems you're having a technical issue. Can you describe exactly what's happening? "
-        "Is this a desktop or laptop? Has this happened before?"
-    ),
-    "scheduling": (
-        "You want to schedule an appointment. Do you prefer mornings or afternoons? "
-        "And which day works best for you?"
-    ),
-    "warranty": (
-        "You're asking about your car's extended warranty. Are you looking to renew it or check your current coverage?"
-    ),
+    "billing": {
+        "initial": "I can help you with your bill. Would you like to review your charges or make a payment?",
+        "follow_up": [
+            "Which bill are you referring to - your recent invoice or a past statement?",
+            "Would you like to know about payment options or due dates?",
+            "Are you having trouble with a specific charge on your bill?"
+        ]
+    },
+    "tech_support": {
+        "initial": "It seems you're having a technical issue. First, is this about a laptop or desktop computer?",
+        "follow_up": [
+            "Is this a hardware or software issue?",
+            "When did you first notice this problem?",
+            "Have you tried restarting your device?"
+        ]
+    },
+    "scheduling": {
+        "initial": "You want to schedule an appointment. Do you prefer mornings or afternoons? And which day works best for you?",
+        "follow_up": []
+    },
+    "warranty": {
+        "initial": "You're asking about your car's extended warranty. First, is this about a specific repair or general coverage?",
+        "follow_up": [
+            "Is your vehicle currently at a repair shop?",
+            "Would you like to check your remaining coverage or file a claim?",
+            "What's the make and model of your vehicle?"
+        ]
+    },
     "general_inquiry": "I'm not sure how to help with that. Could you tell me a bit more?",
 }
 
@@ -79,7 +102,7 @@ intent_responses = {
 # === Central Conversation Handler ===
 
 def process_user_input(user_input):
-    global call_ended, conversation_history
+    global call_ended, conversation_history, conversation_state
 
     if call_ended:
         return
@@ -103,10 +126,13 @@ def process_user_input(user_input):
         summarize_and_end()
         return
 
-    
-    
-    # 3. Add to conversation
+    # Add to conversation history
     conversation_history.append(user_input)
+
+    # 3. Handle follow-up questions if we're in that state
+    if conversation_state["awaiting_response"]:
+        handle_follow_up_response(user_input)
+        return
 
     # 4. Detect intent
     detected_intent = "general_inquiry"
@@ -116,19 +142,54 @@ def process_user_input(user_input):
             break
 
     # 5. Respond to intent
-    response = intent_responses.get(detected_intent, intent_responses["general_inquiry"])
+    if detected_intent in ["billing", "tech_support", "warranty", "scheduling"]:
+        # Start a focused conversation on this topic
+        conversation_state = {
+            "current_intent": detected_intent,
+            "follow_up_index": 0,
+            "awaiting_response": True
+        }
+        response = intent_responses[detected_intent]["initial"]
+    else:
+        response = intent_responses["general_inquiry"]
+
     print(f"Assistant: {response}")
     engine.say(response)
     engine.runAndWait()
 
-    # 6. Ask for more info if needed
-    if len(conversation_history) < minimum_turns and detected_intent == "general_inquiry":
-        followup = "Can you tell me a bit more so I can help you better?"
-        print(f"Assistant: {followup}")
-        engine.say(followup)
+
+# === Handle Follow-up Questions ===
+
+def handle_follow_up_response(user_input):
+    global conversation_state, conversation_history, call_ended
+    
+    intent = conversation_state["current_intent"]
+    follow_ups = intent_responses[intent]["follow_up"]
+    current_index = conversation_state["follow_up_index"]
+    
+    # Add user response to history
+    conversation_history.append(user_input)
+    
+    # Check if we have more follow-ups
+    if current_index < len(follow_ups):
+        # Ask next follow-up question
+        next_question = follow_ups[current_index]
+        print(f"Assistant: {next_question}")
+        engine.say(next_question)
         engine.runAndWait()
-    elif len(conversation_history) >= minimum_turns and detected_intent != "general_inquiry":
+        
+        # Update state
+        conversation_state["follow_up_index"] += 1
+        conversation_state["awaiting_response"] = True
+    else:
+        # No more follow-ups, proceed to summary
         summarize_and_end()
+        conversation_state = {
+            "current_intent": None,
+            "follow_up_index": 0,
+            "awaiting_response": False
+        }
+
 
 # === Summary & End Call ===
 
