@@ -26,7 +26,7 @@ conversation_state = {
 # === Small Talk Responses & Intent Keywords ===
 
 small_talk_map = {
-    "hi": "Hi there!",
+    "hi my name is": "Hi there!",
     "hello": "Hello! How can I help you today?",
     "hey": "Hey! What can I do for you?",
     "how are you": "I'm doing great, thanks for asking! How about you?",
@@ -35,8 +35,6 @@ small_talk_map = {
     "not bad": "That's good to hear. What can I help you with today?",
     "what's your name": "I'm your virtual assistant.",
     "who are you": "I'm your assistant, here to help you with anything you need.",
-    "thank you": "You're very welcome!",
-    "thanks": "Glad to help!",
     "goodbye": "Goodbye! Have a great day!",
     "bye": "Talk to you later!",
     "what do you do": "I'm here to help with things like billing, tech support, appointments, and warranty questions.",
@@ -52,11 +50,11 @@ intent_keywords = {
         "pay my bill", "got charged", "billing issue", "overcharged", "how much do I owe"
     ],
     "tech_support": [
-        "error", "issue", "problem", "help", "support", "overheating", "computer", "slow",
+        "error", "issue", "problem", "support", "overheating", "computer", "slow",
         "broken", "not working", "crashing", "lag", "blue screen", "freeze", "tech issue"
     ],
     "scheduling": [
-        "appointment", "schedule", "reschedule", "meeting", "time", "book", 
+        "appointment", "schedule", "scheduling", "reschedule", "meeting", "time", "book", 
         "calendar", "set something up", "plan a call", "make an appointment"
     ],
     "warranty": [
@@ -86,7 +84,7 @@ intent_responses = {
     "scheduling": {
         "initial": "You want to schedule an appointment. And which day works best for you?",
         "follow_up": ["Do you prefer mornings or afternoons? Or is there a specific time that works", 
-                      "Is there a specific person you want you appointment with?"]
+                      "Is there a specific person you want your appointment with?"]
     },
     "warranty": {
         "initial": "You're asking about your car's extended warranty. First, is this about a specific repair or general coverage?",
